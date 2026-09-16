@@ -10,7 +10,7 @@ const videoLibrary = [
   { id: 1, prompt: '회의실에서 고양이가 스트레칭하기', youtubeId: 'ATKxsgriVGY' },
   { id: 2, prompt: '지하철에서 개가 짖기', youtubeId: '3075AkO8cM0' },
   { id: 3, prompt: '펍에서 펭귄이 미끄러지기', youtubeId: 'RMqZVDiJAP8' },
-  { id: 4, prompt: '백화점에서 사자가 포효하기', youtubeId: 'S4q69KySzXQ' },
+  { id: 4, prompt: '백화점에서 사자가 포효하기', youtubeId: 'mzsRB48lLCg' },
   { id: 5, prompt: '도서관에서 앵무새가 헤드뱅잉하기', youtubeId: 'PngXQ2x8AwM' },
   { id: 6, prompt: '웨딩홀에서 원숭이가 옆돌기', youtubeId: 'Gsv4q_Q43Mk' },
   { id: 7, prompt: '공원에서 백조가 목을 펴기', youtubeId: '1doEyvyJBh4' },
@@ -25,7 +25,7 @@ const videoLibrary = [
   { id: 16, prompt: '소방서에서 재미있게 웃기', youtubeId: 'bKyZXDaVxpw' },
   { id: 17, prompt: '학교에서 신나서 쇼핑하기', youtubeId: 'ATKxsgriVGY' },
   { id: 18, prompt: '장례식장에서 거북이가 기어가기', youtubeId: 'k31qwVzzE8E' },
-  { id: 19, prompt: '놀이공원에서 열심히 운동하기', youtubeId: 'S4q69KySzXQ'  },
+  { id: 19, prompt: '놀이공원에서 열심히 운동하기', youtubeId: 'mzsRB48lLCg'  },
   { id: 20, prompt: '박물관에서 독수리가 날개짓하기', youtubeId: 'h6KUzhK93lI'  },
 ];
 
