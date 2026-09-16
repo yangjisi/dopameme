@@ -11,22 +11,22 @@ const videoLibrary = [
   { id: 2, prompt: '지하철에서 개가 짖기', youtubeId: '3075AkO8cM0' },
   { id: 3, prompt: '펍에서 펭귄이 미끄러지기', youtubeId: 'RMqZVDiJAP8' },
   { id: 4, prompt: '백화점에서 사자가 포효하기', youtubeId: 'S4q69KySzXQ' },
-  { id: 5, prompt: '도서관에서 앵무새가 헤드뱅잉하기', youtubeId: 'xSGIwEsouHc' },
+  { id: 5, prompt: '도서관에서 앵무새가 헤드뱅잉하기', youtubeId: 'PngXQ2x8AwM' },
   { id: 6, prompt: '웨딩홀에서 원숭이가 옆돌기', youtubeId: 'Gsv4q_Q43Mk' },
-  { id: 7, prompt: '공원에서 백조가 목을 펴기', youtubeId: 'q3hTSTh9cAo' },
-  { id: 8, prompt: '병원에서 돌고래가 점프하기', youtubeId: 'ATKxsgriVGY' },
+  { id: 7, prompt: '공원에서 백조가 목을 펴기', youtubeId: '1doEyvyJBh4' },
+  { id: 8, prompt: '병원에서 돌고래가 점프하기', youtubeId: '063A8qJ_uTM' },
   { id: 9, prompt: '영화관에서 너구리가 손을 비비기', youtubeId: 'UjK27PhoQMs' },
-  { id: 10, prompt: '운동장에서 독수리가 날개짓하기', youtubeId: 'S4q69KySzXQ'  },
+  { id: 10, prompt: '운동장에서 독수리가 날개짓하기', youtubeId: 'BcTBplMMVdM'  },
   { id: 11, prompt: '사무실에서 거북이가 기어가기', youtubeId: 'HYCGIFmJ1LE' },
   { id: 12, prompt: '버스에서 고양이가 스트레칭하기', youtubeId: 'q3hTSTh9cAo'  },
   { id: 13, prompt: '콘서트홀에서 개가 짖기', youtubeId: 'xSGIwEsouHc' },
-  { id: 14, prompt: '골프장에서 사자가 포효하기', youtubeId: 'xSGIwEsouHc' },
+  { id: 14, prompt: '골프장에서 사자가 포효하기', youtubeId: 'IMp99MgNuPI' },
   { id: 15, prompt: '카페에서 앵무새가 헤드뱅잉하기', youtubeId: 'q3hTSTh9cAo' },
-  { id: 16, prompt: '소방서에서 재미있게 웃기', youtubeId: 'UjK27PhoQMs' },
+  { id: 16, prompt: '소방서에서 재미있게 웃기', youtubeId: 'bKyZXDaVxpw' },
   { id: 17, prompt: '학교에서 신나서 쇼핑하기', youtubeId: 'ATKxsgriVGY' },
-  { id: 18, prompt: '장례식장에서 거북이가 기어가기', youtubeId: 'S4q69KySzXQ' },
+  { id: 18, prompt: '장례식장에서 거북이가 기어가기', youtubeId: 'k31qwVzzE8E' },
   { id: 19, prompt: '놀이공원에서 열심히 운동하기', youtubeId: 'S4q69KySzXQ'  },
-  { id: 20, prompt: '박물관에서 독수리가 날개짓하기', youtubeId: 'Gsv4q_Q43Mk'  },
+  { id: 20, prompt: '박물관에서 독수리가 날개짓하기', youtubeId: 'h6KUzhK93lI'  },
 ];
 
 // 16:9 더미 영상을 9:16 프레임에 꽉 채우기 위한 클래스
@@ -35,7 +35,7 @@ const COVER_IFRAME =
   '[&>iframe]:absolute [&>iframe]:top-1/2 [&>iframe]:left-1/2 ' +
   '[&>iframe]:-translate-x-1/2 [&>iframe]:-translate-y-1/2 ' +
   '[&>iframe]:h-full [&>iframe]:w-[320%] [&>iframe]:max-w-none';
-
+ 
 export default function DopaMemeGame() {
   const [currentVideo, setCurrentVideo] = useState(videoLibrary[0]);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -48,7 +48,7 @@ export default function DopaMemeGame() {
   const [feedNode, setFeedNode] = useState(null);
   const [soundOn, setSoundOn] = useState(false);
   const [headerH, setHeaderH] = useState(0);
-
+ 
   const headerRef = useRef(null);
   const playersRef = useRef({});
   const hostRefs = useRef({});
@@ -57,9 +57,9 @@ export default function DopaMemeGame() {
   const soundOnRef = useRef(false);
   const playHostRef = useRef(null);
   const playPlayerRef = useRef(null);
-
+ 
   useEffect(() => { soundOnRef.current = soundOn; }, [soundOn]);
-
+ 
   // ── 헤더 실제 높이 측정 ─────────────────────────────────
   useEffect(() => {
     const el = headerRef.current;
@@ -70,7 +70,7 @@ export default function DopaMemeGame() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-
+ 
   // ── YouTube IFrame API 로드 ──────────────────────────────
   useEffect(() => {
     if (window.YT && window.YT.Player) { setApiReady(true); return; }
@@ -86,7 +86,7 @@ export default function DopaMemeGame() {
       document.body.appendChild(tag);
     }
   }, []);
-
+ 
   const applySound = (player) => {
     if (!player || typeof player.unMute !== 'function') return;
     try {
@@ -94,7 +94,7 @@ export default function DopaMemeGame() {
       else { player.mute(); }
     } catch (_) {}
   };
-
+ 
   // ── 피드 플레이어 생성 ───────────────────────────────────
   const createFeedPlayers = useCallback(() => {
     if (!window.YT || !window.YT.Player) return;
@@ -104,11 +104,11 @@ export default function DopaMemeGame() {
       const host = hostRefs.current[id];
       const ytId = videoIdMap.current[id];
       if (!host || !ytId) return;
-
+ 
       const inner = document.createElement('div');
       host.innerHTML = '';
       host.appendChild(inner);
-
+ 
       playersRef.current[id] = new window.YT.Player(inner, {
         width: '100%', height: '100%', videoId: ytId,
         playerVars: {
@@ -124,9 +124,9 @@ export default function DopaMemeGame() {
       });
     });
   }, []);
-
+ 
   useEffect(() => { if (apiReady) createFeedPlayers(); }, [apiReady, createFeedPlayers]);
-
+ 
   const setHostRef = useCallback((id, ytId) => (el) => {
     if (el) {
       hostRefs.current[id] = el;
@@ -136,16 +136,16 @@ export default function DopaMemeGame() {
       delete hostRefs.current[id];
     }
   }, [createFeedPlayers]);
-
+ 
   // ── 플레이 탭 플레이어 ───────────────────────────────────
   const setPlayHostRef = useCallback((el) => {
     playHostRef.current = el;
     if (!el || !window.YT || !window.YT.Player || playPlayerRef.current) return;
-
+ 
     const inner = document.createElement('div');
     el.innerHTML = '';
     el.appendChild(inner);
-
+ 
     playPlayerRef.current = new window.YT.Player(inner, {
       width: '100%', height: '100%', videoId: currentVideo.youtubeId,
       playerVars: {
@@ -155,20 +155,20 @@ export default function DopaMemeGame() {
       events: { onReady: (e) => { applySound(e.target); e.target.playVideo(); } },
     });
   }, [currentVideo.youtubeId]);
-
+ 
   useEffect(() => {
     if (apiReady && selectedTab === 'play' && playHostRef.current && !playPlayerRef.current) {
       setPlayHostRef(playHostRef.current);
     }
   }, [apiReady, selectedTab, setPlayHostRef]);
-
+ 
   useEffect(() => {
     if (selectedTab !== 'play' || isSpinning) return;
     const p = playPlayerRef.current;
     if (!p || typeof p.loadVideoById !== 'function') return;
     try { p.loadVideoById({ videoId: currentVideo.youtubeId }); applySound(p); } catch (_) {}
   }, [currentVideo.youtubeId, isSpinning, selectedTab]);
-
+ 
   // ── 탭 전환 정리 ────────────────────────────────────────
   useEffect(() => {
     if (selectedTab === 'feed') {
@@ -187,14 +187,14 @@ export default function DopaMemeGame() {
       visibleIdRef.current = null;
     }
   }, [selectedTab]);
-
+ 
   // ── 소리 토글 반영 ──────────────────────────────────────
   useEffect(() => {
     soundOnRef.current = soundOn;
     if (selectedTab === 'play') applySound(playPlayerRef.current);
     else if (visibleVideoId != null) applySound(playersRef.current[visibleVideoId]);
   }, [soundOn, selectedTab, visibleVideoId]);
-
+ 
   // ── 슬롯머신 ────────────────────────────────────────────
   const spinSlot = () => {
     if (isSpinning) return;
@@ -206,7 +206,7 @@ export default function DopaMemeGame() {
       if (spins > 15) { clearInterval(spinInterval); setIsSpinning(false); }
     }, 80);
   };
-
+ 
   const submitTitle = () => {
     if (!titleInput.trim()) return;
     const newSubmission = {
@@ -222,7 +222,7 @@ export default function DopaMemeGame() {
     setTitleInput('');
     setLikes({ ...likes, [newSubmission.id]: false });
   };
-
+ 
   const toggleLike = (id) => {
     setLikes((prev) => ({ ...prev, [id]: !prev[id] }));
     setSubmissions((prev) =>
@@ -231,19 +231,19 @@ export default function DopaMemeGame() {
       )
     );
   };
-
+ 
   const formatTime = (date) => {
     if (!date) return '';
     const d = date instanceof Date ? date : new Date(date);
     return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
   };
-
+ 
   // ── Intersection Observer ───────────────────────────────
   useEffect(() => {
     if (!feedNode || submissions.length === 0) return;
     visibleIdRef.current = submissions[0].id;
     setVisibleVideoId(submissions[0].id);
-
+ 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -259,7 +259,7 @@ export default function DopaMemeGame() {
     feedNode.querySelectorAll('[data-video-id]').forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, [feedNode, submissions.length]);
-
+ 
   useEffect(() => {
     if (selectedTab !== 'feed' || visibleVideoId == null) return;
     visibleIdRef.current = visibleVideoId;
@@ -271,7 +271,7 @@ export default function DopaMemeGame() {
       } catch (_) {}
     });
   }, [visibleVideoId, selectedTab, apiReady]);
-
+ 
   return (
     <div className="min-h-screen bg-black text-white">
       {/* ── 헤더 ── */}
@@ -286,7 +286,7 @@ export default function DopaMemeGame() {
             </h1>
             <p className="text-[10px] text-gray-500">제목짓기학원</p>
           </div>
-
+ 
           <button
             onClick={() => setSoundOn((v) => !v)}
             className={`absolute right-4 top-3 w-9 h-9 rounded-full flex items-center justify-center text-base transition-all ${
@@ -295,7 +295,7 @@ export default function DopaMemeGame() {
           >
             {soundOn ? '🔊' : '🔇'}
           </button>
-
+ 
           <div className="flex gap-2 mt-2 justify-center">
             <button
               onClick={() => setSelectedTab('play')}
@@ -316,7 +316,7 @@ export default function DopaMemeGame() {
           </div>
         </div>
       </div>
-
+ 
       <AnimatePresence>
         {selectedTab === 'play' ? (
           /* ── 플레이 탭 (세로 숏폼) ── */
@@ -338,21 +338,7 @@ export default function DopaMemeGame() {
                 </div>
                 {/* 유튜브 UI 클릭 차단 */}
                 <div className="absolute inset-0" />
-
-                {/* 다른 영상 버튼 */}
-                <motion.button
-                  onClick={spinSlot}
-                  disabled={isSpinning}
-                  whileTap={!isSpinning ? { scale: 0.95 } : {}}
-                  className={`absolute top-3 left-3 px-3 py-2 rounded-full text-sm font-bold z-20 ${
-                    isSpinning
-                      ? 'bg-gray-700/80 text-gray-400'
-                      : 'bg-gradient-to-r from-cyan-500 to-pink-500 text-white'
-                  }`}
-                >
-                  {isSpinning ? '🎬 스핀 중' : '🎰 다른 영상'}
-                </motion.button>
-
+ 
                 {/* 제목 입력 오버레이 */}
                 <div className="absolute bottom-0 left-0 right-0 z-20">
                   <div className="bg-gradient-to-t from-black via-black/85 to-transparent pt-16 pb-4 px-4">
@@ -389,6 +375,22 @@ export default function DopaMemeGame() {
                     </div>
                     <div className="text-[10px] text-gray-500 mt-1.5">
                       {titleInput.length}/100 · Enter로 전송
+                    </div>
+ 
+                    {/* 다른 영상 버튼 */}
+                    <div className="flex justify-center mt-3">
+                      <motion.button
+                        onClick={spinSlot}
+                        disabled={isSpinning}
+                        whileTap={!isSpinning ? { scale: 0.95 } : {}}
+                        className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
+                          isSpinning
+                            ? 'bg-gray-700/80 text-gray-400'
+                            : 'bg-gradient-to-r from-cyan-500 to-pink-500 text-white shadow-lg shadow-pink-500/30'
+                        }`}
+                      >
+                        {isSpinning ? '🎬 스핀 중...' : '🎰 다른 영상'}
+                      </motion.button>
                     </div>
                   </div>
                 </div>
@@ -427,13 +429,13 @@ export default function DopaMemeGame() {
                     <div className={`absolute inset-0 overflow-hidden ${COVER_IFRAME}`}>
                       <div ref={setHostRef(sub.id, sub.youtubeId)} className="w-full h-full" />
                     </div>
-
+ 
                     {/* 탭하면 소리 토글 */}
                     <div
                       className="absolute inset-0 cursor-pointer"
                       onClick={() => setSoundOn((v) => !v)}
                     />
-
+ 
                     {/* 제목 */}
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/70 to-transparent pb-8 pt-16 px-4 pointer-events-none">
                       <p className="text-xl font-bold text-white mb-1 break-words pr-20 leading-snug">
@@ -441,7 +443,7 @@ export default function DopaMemeGame() {
                       </p>
                       <p className="text-xs text-gray-500">{formatTime(sub.timestamp)}</p>
                     </div>
-
+ 
                     {/* 액션 */}
                     <div className="absolute right-3 bottom-28 flex flex-col gap-4 z-10">
                       <motion.button
@@ -454,7 +456,7 @@ export default function DopaMemeGame() {
                         </div>
                         <span className="text-xs font-semibold text-white">{sub.likes}</span>
                       </motion.button>
-
+ 
                       <button className="flex flex-col items-center opacity-50" disabled>
                         <div className="w-12 h-12 rounded-full bg-gray-800/60 flex items-center justify-center text-2xl">
                           💬
@@ -466,11 +468,11 @@ export default function DopaMemeGame() {
                         </div>
                       </button>
                     </div>
-
+ 
                     <div className="absolute top-3 right-3 bg-black/60 rounded-full px-3 py-1 text-xs text-white font-semibold pointer-events-none z-10">
                       {idx + 1} / {submissions.length}
                     </div>
-
+ 
                     {!soundOn && (
                       <div className="absolute top-3 left-3 bg-black/60 rounded-full px-3 py-1 text-xs text-gray-300 pointer-events-none z-10">
                         🔇 탭하면 소리
@@ -486,3 +488,4 @@ export default function DopaMemeGame() {
     </div>
   );
 }
+ 
