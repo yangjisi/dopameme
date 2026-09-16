@@ -339,6 +339,9 @@ export default function DopaMemeGame() {
                 {/* 유튜브 UI 클릭 차단 */}
                 <div className="absolute inset-0" />
  
+                {/* 유튜브 상단 정보(채널/제목) 가리개 */}
+                <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-black via-black/80 to-transparent z-10 pointer-events-none" />
+ 
                 {/* 제목 입력 오버레이 */}
                 <div className="absolute bottom-0 left-0 right-0 z-20">
                   <div className="bg-gradient-to-t from-black via-black/85 to-transparent pt-16 pb-4 px-4">
@@ -356,7 +359,8 @@ export default function DopaMemeGame() {
                           }
                         }}
                         placeholder="떠오르는 제목을 입력..."
-                        className="flex-1 bg-white/10 backdrop-blur text-white rounded-xl px-3 py-2.5 text-sm border border-white/20 focus:border-pink-500 focus:outline-none resize-none placeholder:text-gray-400"
+                        className="flex-1 bg-white/10 backdrop-blur text-white rounded-xl px-3 py-2.5 text-base border border-white/20 outline-none focus:outline-none focus:ring-0 resize-none placeholder:text-gray-400"
+                        style={{ WebkitTapHighlightColor: 'transparent' }}
                         rows="1"
                         maxLength="100"
                       />
@@ -436,6 +440,9 @@ export default function DopaMemeGame() {
                       onClick={() => setSoundOn((v) => !v)}
                     />
  
+                    {/* 유튜브 상단 정보(채널/제목) 가리개 */}
+                    <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none" />
+ 
                     {/* 제목 */}
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/70 to-transparent pb-8 pt-16 px-4 pointer-events-none">
                       <p className="text-xl font-bold text-white mb-1 break-words pr-20 leading-snug">
@@ -488,4 +495,3 @@ export default function DopaMemeGame() {
     </div>
   );
 }
- 
