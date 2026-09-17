@@ -2,493 +2,349 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// 더미 데이터 (실제 서비스에서는 9:16 AI 영상으로 교체)
-const videoLibrary = [
-  { id: 1, prompt: '회의실에서 고양이가 스트레칭하기', youtubeId: 'ATKxsgriVGY' },
-  { id: 2, prompt: '지하철에서 개가 짖기', youtubeId: '3075AkO8cM0' },
-  { id: 3, prompt: '펍에서 펭귄이 미끄러지기', youtubeId: 'RMqZVDiJAP8' },
-  { id: 4, prompt: '백화점에서 사자가 포효하기', youtubeId: 'mzsRB48lLCg' },
-  { id: 5, prompt: '도서관에서 앵무새가 헤드뱅잉하기', youtubeId: 'PngXQ2x8AwM' },
-  { id: 6, prompt: '웨딩홀에서 원숭이가 옆돌기', youtubeId: 'Gsv4q_Q43Mk' },
-  { id: 7, prompt: '공원에서 백조가 목을 펴기', youtubeId: '1doEyvyJBh4' },
-  { id: 8, prompt: '병원에서 돌고래가 점프하기', youtubeId: '063A8qJ_uTM' },
-  { id: 9, prompt: '영화관에서 너구리가 손을 비비기', youtubeId: 'UjK27PhoQMs' },
-  { id: 10, prompt: '운동장에서 독수리가 날개짓하기', youtubeId: 'BcTBplMMVdM'  },
-  { id: 11, prompt: '사무실에서 거북이가 기어가기', youtubeId: 'HYCGIFmJ1LE' },
-  { id: 12, prompt: '버스에서 고양이가 스트레칭하기', youtubeId: 'q3hTSTh9cAo'  },
-  { id: 13, prompt: '콘서트홀에서 개가 짖기', youtubeId: 'xSGIwEsouHc' },
-  { id: 14, prompt: '골프장에서 사자가 포효하기', youtubeId: 'IMp99MgNuPI' },
-  { id: 15, prompt: '카페에서 앵무새가 헤드뱅잉하기', youtubeId: 'q3hTSTh9cAo' },
-  { id: 16, prompt: '소방서에서 재미있게 웃기', youtubeId: 'bKyZXDaVxpw' },
-  { id: 17, prompt: '학교에서 신나서 쇼핑하기', youtubeId: 'ATKxsgriVGY' },
-  { id: 18, prompt: '장례식장에서 거북이가 기어가기', youtubeId: 'k31qwVzzE8E' },
-  { id: 19, prompt: '놀이공원에서 열심히 운동하기', youtubeId: 'mzsRB48lLCg'  },
-  { id: 20, prompt: '박물관에서 독수리가 날개짓하기', youtubeId: 'h6KUzhK93lI'  },
+// ────────────────────────────────────────────────────────────
+// 콜렉션 오픈 조건: 같은 태그를 가진 이미지가 N장 모이면
+// ────────────────────────────────────────────────────────────
+const OPEN_THRESHOLD = 3;
+
+// ────────────────────────────────────────────────────────────
+// 더미 이미지 + 더미 태그
+// 실제로는 서버에서 내려주고, 태그는 사용자에게 절대 노출 안 됨
+// ────────────────────────────────────────────────────────────
+const RAW = [
+  ['img01', ['aaa', 'bbb']],
+  ['img02', ['aaa', 'ccc']],
+  ['img03', ['bbb', 'ddd']],
+  ['img04', ['aaa', 'eee']],
+  ['img05', ['ccc', 'fff']],
+  ['img06', ['bbb', 'ccc']],
+  ['img07', ['ddd', 'eee']],
+  ['img08', ['aaa', 'fff']],
+  ['img09', ['bbb', 'eee']],
+  ['img10', ['ccc', 'ddd']],
+  ['img11', ['aaa', 'ggg']],
+  ['img12', ['eee', 'fff']],
+  ['img13', ['bbb', 'ggg']],
+  ['img14', ['ccc', 'eee']],
+  ['img15', ['ddd', 'fff']],
+  ['img16', ['aaa', 'hhh']],
+  ['img17', ['bbb', 'fff']],
+  ['img18', ['ccc', 'ggg']],
+  ['img19', ['ddd', 'hhh']],
+  ['img20', ['eee', 'ggg']],
+  ['img21', ['aaa', 'ddd']],
+  ['img22', ['bbb', 'hhh']],
+  ['img23', ['ccc', 'hhh']],
+  ['img24', ['ddd', 'ggg']],
+  ['img25', ['eee', 'hhh']],
+  ['img26', ['fff', 'ggg']],
+  ['img27', ['fff', 'hhh']],
+  ['img28', ['ggg', 'hhh']],
+  ['img29', ['aaa', 'bbb']],
+  ['img30', ['ccc', 'fff']],
+  ['img31', ['ddd', 'eee']],
+  ['img32', ['bbb', 'ggg']],
+  ['img33', ['aaa', 'ccc']],
+  ['img34', ['eee', 'fff']],
+  ['img35', ['ddd', 'hhh']],
+  ['img36', ['bbb', 'eee']],
 ];
 
-// 16:9 더미 영상을 9:16 프레임에 꽉 채우기 위한 클래스
-// (실제 9:16 영상으로 교체하면 [&>iframe]:w-full 로 바꾸면 됨)
-const COVER_IFRAME =
-  '[&>iframe]:absolute [&>iframe]:top-1/2 [&>iframe]:left-1/2 ' +
-  '[&>iframe]:-translate-x-1/2 [&>iframe]:-translate-y-1/2 ' +
-  '[&>iframe]:h-full [&>iframe]:w-[320%] [&>iframe]:max-w-none';
- 
-export default function DopaMemeGame() {
-  const [currentVideo, setCurrentVideo] = useState(videoLibrary[0]);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [titleInput, setTitleInput] = useState('');
-  const [submissions, setSubmissions] = useState([]);
-  const [likes, setLikes] = useState({});
-  const [selectedTab, setSelectedTab] = useState('play');
-  const [visibleVideoId, setVisibleVideoId] = useState(null);
-  const [apiReady, setApiReady] = useState(false);
-  const [feedNode, setFeedNode] = useState(null);
-  const [soundOn, setSoundOn] = useState(false);
-  const [headerH, setHeaderH] = useState(0);
- 
-  const headerRef = useRef(null);
-  const playersRef = useRef({});
-  const hostRefs = useRef({});
-  const videoIdMap = useRef({});
-  const visibleIdRef = useRef(null);
-  const soundOnRef = useRef(false);
-  const playHostRef = useRef(null);
-  const playPlayerRef = useRef(null);
- 
-  useEffect(() => { soundOnRef.current = soundOn; }, [soundOn]);
- 
-  // ── 헤더 실제 높이 측정 ─────────────────────────────────
-  useEffect(() => {
-    const el = headerRef.current;
-    if (!el) return;
-    const update = () => setHeaderH(el.offsetHeight);
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
- 
-  // ── YouTube IFrame API 로드 ──────────────────────────────
-  useEffect(() => {
-    if (window.YT && window.YT.Player) { setApiReady(true); return; }
-    const prev = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      if (typeof prev === 'function') prev();
-      setApiReady(true);
-    };
-    if (!document.getElementById('yt-iframe-api')) {
-      const tag = document.createElement('script');
-      tag.id = 'yt-iframe-api';
-      tag.src = 'https://www.youtube.com/iframe_api';
-      document.body.appendChild(tag);
-    }
-  }, []);
- 
-  const applySound = (player) => {
-    if (!player || typeof player.unMute !== 'function') return;
-    try {
-      if (soundOnRef.current) { player.unMute(); player.setVolume(100); }
-      else { player.mute(); }
-    } catch (_) {}
-  };
- 
-  // ── 피드 플레이어 생성 ───────────────────────────────────
-  const createFeedPlayers = useCallback(() => {
-    if (!window.YT || !window.YT.Player) return;
-    Object.keys(hostRefs.current).forEach((key) => {
-      const id = Number(key);
-      if (playersRef.current[id]) return;
-      const host = hostRefs.current[id];
-      const ytId = videoIdMap.current[id];
-      if (!host || !ytId) return;
- 
-      const inner = document.createElement('div');
-      host.innerHTML = '';
-      host.appendChild(inner);
- 
-      playersRef.current[id] = new window.YT.Player(inner, {
-        width: '100%', height: '100%', videoId: ytId,
-        playerVars: {
-          autoplay: 0, controls: 0, mute: 1, playsinline: 1,
-          modestbranding: 1, rel: 0, loop: 1, playlist: ytId,
-        },
-        events: {
-          onReady: (e) => {
-            if (visibleIdRef.current === id) { applySound(e.target); e.target.playVideo(); }
-            else { e.target.mute(); }
-          },
-        },
+const imagePool = RAW.map(([seed, tags], i) => ({
+  id: i + 1,
+  seed,
+  tags,
+  src: `https://picsum.photos/seed/${seed}/600/900`,
+}));
+
+// 유틸
+const shuffle = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+export default function DopaMeme() {
+  const [tab, setTab] = useState('play');
+  const [collected, setCollected] = useState([]);   // 고른 이미지들
+  const [openedDecks, setOpenedDecks] = useState([]); // [{ tag, openedAt }]
+  const [candidates, setCandidates] = useState([]);
+  const [newDeck, setNewDeck] = useState(null);     // 얼럿에 띄울 deck
+
+  // 태그별 보유 수
+  const tagCounts = useMemo(() => {
+    const m = {};
+    collected.forEach((img) => {
+      img.tags.forEach((t) => {
+        m[t] = (m[t] || 0) + 1;
       });
     });
-  }, []);
- 
-  useEffect(() => { if (apiReady) createFeedPlayers(); }, [apiReady, createFeedPlayers]);
- 
-  const setHostRef = useCallback((id, ytId) => (el) => {
-    if (el) {
-      hostRefs.current[id] = el;
-      videoIdMap.current[id] = ytId;
-      createFeedPlayers();
-    } else {
-      delete hostRefs.current[id];
-    }
-  }, [createFeedPlayers]);
- 
-  // ── 플레이 탭 플레이어 ───────────────────────────────────
-  const setPlayHostRef = useCallback((el) => {
-    playHostRef.current = el;
-    if (!el || !window.YT || !window.YT.Player || playPlayerRef.current) return;
- 
-    const inner = document.createElement('div');
-    el.innerHTML = '';
-    el.appendChild(inner);
- 
-    playPlayerRef.current = new window.YT.Player(inner, {
-      width: '100%', height: '100%', videoId: currentVideo.youtubeId,
-      playerVars: {
-        autoplay: 1, controls: 0, mute: 1, playsinline: 1,
-        modestbranding: 1, rel: 0, loop: 1, playlist: currentVideo.youtubeId,
-      },
-      events: { onReady: (e) => { applySound(e.target); e.target.playVideo(); } },
-    });
-  }, [currentVideo.youtubeId]);
- 
-  useEffect(() => {
-    if (apiReady && selectedTab === 'play' && playHostRef.current && !playPlayerRef.current) {
-      setPlayHostRef(playHostRef.current);
-    }
-  }, [apiReady, selectedTab, setPlayHostRef]);
- 
-  useEffect(() => {
-    if (selectedTab !== 'play' || isSpinning) return;
-    const p = playPlayerRef.current;
-    if (!p || typeof p.loadVideoById !== 'function') return;
-    try { p.loadVideoById({ videoId: currentVideo.youtubeId }); applySound(p); } catch (_) {}
-  }, [currentVideo.youtubeId, isSpinning, selectedTab]);
- 
-  // ── 탭 전환 정리 ────────────────────────────────────────
-  useEffect(() => {
-    if (selectedTab === 'feed') {
-      if (playPlayerRef.current) {
-        try { playPlayerRef.current.destroy(); } catch (_) {}
-        playPlayerRef.current = null;
-        playHostRef.current = null;
+    return m;
+  }, [collected]);
+
+  // ── 후보 3장 뽑기 ───────────────────────────────────────
+  // 사용자에겐 완전 랜덤으로 보이지만,
+  // 완성 직전인 태그(N-1장)를 가진 이미지를 한 장 섞어 수렴시킴
+  const pickCandidates = useCallback(
+    (collectedList, counts, openedList) => {
+      const collectedIds = new Set(collectedList.map((c) => c.id));
+      const opened = new Set(openedList.map((d) => d.tag));
+      const available = imagePool.filter((img) => !collectedIds.has(img.id));
+
+      if (available.length <= 3) return shuffle(available);
+
+      // 완성 직전 태그
+      const nearTags = Object.keys(counts).filter(
+        (t) => counts[t] === OPEN_THRESHOLD - 1 && !opened.has(t)
+      );
+
+      const result = [];
+
+      if (nearTags.length > 0) {
+        const targetTag = nearTags[Math.floor(Math.random() * nearTags.length)];
+        const hit = shuffle(available.filter((img) => img.tags.includes(targetTag)));
+        if (hit.length > 0) result.push(hit[0]);
       }
-    } else {
-      Object.values(playersRef.current).forEach((p) => {
-        try { p.destroy(); } catch (_) {}
-      });
-      playersRef.current = {};
-      hostRefs.current = {};
-      setVisibleVideoId(null);
-      visibleIdRef.current = null;
-    }
-  }, [selectedTab]);
- 
-  // ── 소리 토글 반영 ──────────────────────────────────────
+
+      // 남은 자리는 태그가 겹치지 않게 랜덤
+      const rest = shuffle(available.filter((img) => !result.includes(img)));
+      for (const img of rest) {
+        if (result.length >= 3) break;
+        const usedTags = new Set(result.flatMap((r) => r.tags));
+        const overlap = img.tags.some((t) => usedTags.has(t));
+        if (!overlap) result.push(img);
+      }
+      // 그래도 못 채웠으면 아무거나
+      for (const img of rest) {
+        if (result.length >= 3) break;
+        if (!result.includes(img)) result.push(img);
+      }
+
+      return shuffle(result);
+    },
+    []
+  );
+
+  // 초기 후보
   useEffect(() => {
-    soundOnRef.current = soundOn;
-    if (selectedTab === 'play') applySound(playPlayerRef.current);
-    else if (visibleVideoId != null) applySound(playersRef.current[visibleVideoId]);
-  }, [soundOn, selectedTab, visibleVideoId]);
- 
-  // ── 슬롯머신 ────────────────────────────────────────────
-  const spinSlot = () => {
-    if (isSpinning) return;
-    setIsSpinning(true);
-    let spins = 0;
-    const spinInterval = setInterval(() => {
-      setCurrentVideo(videoLibrary[Math.floor(Math.random() * videoLibrary.length)]);
-      spins++;
-      if (spins > 15) { clearInterval(spinInterval); setIsSpinning(false); }
-    }, 80);
-  };
- 
-  const submitTitle = () => {
-    if (!titleInput.trim()) return;
-    const newSubmission = {
-      id: Date.now(),
-      videoId: currentVideo.id,
-      prompt: currentVideo.prompt,
-      youtubeId: currentVideo.youtubeId,
-      title: titleInput,
-      timestamp: new Date(),
-      likes: 0,
-    };
-    setSubmissions([newSubmission, ...submissions]);
-    setTitleInput('');
-    setLikes({ ...likes, [newSubmission.id]: false });
-  };
- 
-  const toggleLike = (id) => {
-    setLikes((prev) => ({ ...prev, [id]: !prev[id] }));
-    setSubmissions((prev) =>
-      prev.map((sub) =>
-        sub.id === id ? { ...sub, likes: likes[id] ? sub.likes - 1 : sub.likes + 1 } : sub
-      )
-    );
-  };
- 
-  const formatTime = (date) => {
-    if (!date) return '';
-    const d = date instanceof Date ? date : new Date(date);
-    return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-  };
- 
-  // ── Intersection Observer ───────────────────────────────
+    setCandidates(pickCandidates([], {}, []));
+  }, [pickCandidates]);
+
+  // 다음 후보 이미지 미리 받아두기
   useEffect(() => {
-    if (!feedNode || submissions.length === 0) return;
-    visibleIdRef.current = submissions[0].id;
-    setVisibleVideoId(submissions[0].id);
- 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const id = Number(entry.target.dataset.videoId);
-            visibleIdRef.current = id;
-            setVisibleVideoId(id);
-          }
-        });
-      },
-      { root: feedNode, threshold: 0.6 }
-    );
-    feedNode.querySelectorAll('[data-video-id]').forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, [feedNode, submissions.length]);
- 
-  useEffect(() => {
-    if (selectedTab !== 'feed' || visibleVideoId == null) return;
-    visibleIdRef.current = visibleVideoId;
-    Object.entries(playersRef.current).forEach(([id, player]) => {
-      if (!player || typeof player.playVideo !== 'function') return;
-      try {
-        if (Number(id) === visibleVideoId) { applySound(player); player.playVideo(); }
-        else { player.mute(); player.pauseVideo(); }
-      } catch (_) {}
+    imagePool.slice(0, 12).forEach((img) => {
+      const el = new Image();
+      el.src = img.src;
     });
-  }, [visibleVideoId, selectedTab, apiReady]);
- 
+  }, []);
+
+  // ── 이미지 선택 ─────────────────────────────────────────
+  const choose = (img) => {
+    const nextCollected = [...collected, img];
+
+    // 태그 카운트 재계산
+    const counts = {};
+    nextCollected.forEach((c) => {
+      c.tags.forEach((t) => {
+        counts[t] = (counts[t] || 0) + 1;
+      });
+    });
+
+    // 새로 열린 deck 확인 (방금 고른 이미지의 태그만 검사)
+    const alreadyOpen = new Set(openedDecks.map((d) => d.tag));
+    const justOpened = img.tags.find(
+      (t) => counts[t] === OPEN_THRESHOLD && !alreadyOpen.has(t)
+    );
+
+    setCollected(nextCollected);
+
+    let nextOpened = openedDecks;
+    if (justOpened) {
+      nextOpened = [{ tag: justOpened }, ...openedDecks];
+      setOpenedDecks(nextOpened);
+      setNewDeck(justOpened);
+      setTab('collection');
+    }
+
+    setCandidates(pickCandidates(nextCollected, counts, nextOpened));
+  };
+
+  // deck별 이미지
+  const deckImages = (tag) => collected.filter((c) => c.tags.includes(tag));
+
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="h-[100dvh] bg-black text-white flex flex-col overflow-hidden">
       {/* ── 헤더 ── */}
-      <div
-        ref={headerRef}
-        className="fixed top-0 left-0 right-0 z-50 bg-black/95 backdrop-blur border-b border-gray-800"
-      >
-        <div className="max-w-md mx-auto px-4 py-3 relative">
-          <div className="text-center">
-            <h1 className="text-2xl font-black bg-gradient-to-r from-cyan-400 via-pink-500 to-orange-400 bg-clip-text text-transparent">
-              🧠 도파Meme!
-            </h1>
-            <p className="text-[10px] text-gray-500">제목짓기학원</p>
-          </div>
- 
-          <button
-            onClick={() => setSoundOn((v) => !v)}
-            className={`absolute right-4 top-3 w-9 h-9 rounded-full flex items-center justify-center text-base transition-all ${
-              soundOn ? 'bg-pink-500' : 'bg-gray-800'
-            }`}
-          >
-            {soundOn ? '🔊' : '🔇'}
-          </button>
- 
-          <div className="flex gap-2 mt-2 justify-center">
+      <div className="shrink-0 border-b border-neutral-800 px-4 pt-3 pb-2">
+        <div className="max-w-md mx-auto">
+          <h1 className="text-center text-xl font-black tracking-tight bg-gradient-to-r from-cyan-400 via-pink-500 to-orange-400 bg-clip-text text-transparent">
+            도파Meme!
+          </h1>
+          <div className="flex gap-2 mt-2">
             <button
-              onClick={() => setSelectedTab('play')}
-              className={`px-4 py-1 text-sm font-semibold rounded transition-all ${
-                selectedTab === 'play' ? 'bg-pink-500 text-white' : 'bg-gray-900 text-gray-400'
+              onClick={() => setTab('play')}
+              className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-colors ${
+                tab === 'play'
+                  ? 'bg-pink-500 text-white'
+                  : 'bg-neutral-900 text-neutral-500'
               }`}
             >
-              🎮 플레이
+              고르기
             </button>
             <button
-              onClick={() => setSelectedTab('feed')}
-              className={`px-4 py-1 text-sm font-semibold rounded transition-all ${
-                selectedTab === 'feed' ? 'bg-pink-500 text-white' : 'bg-gray-900 text-gray-400'
+              onClick={() => setTab('collection')}
+              className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-colors ${
+                tab === 'collection'
+                  ? 'bg-pink-500 text-white'
+                  : 'bg-neutral-900 text-neutral-500'
               }`}
             >
-              📺 피드 ({submissions.length})
+              콜렉션 {collected.length > 0 && `(${collected.length})`}
             </button>
           </div>
         </div>
       </div>
- 
-      <AnimatePresence>
-        {selectedTab === 'play' ? (
-          /* ── 플레이 탭 (세로 숏폼) ── */
-          <motion.div
-            key="play"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{ paddingTop: headerH }}
-          >
-            <div
-              className="max-w-md mx-auto px-3 py-3"
-              style={{ height: `calc(100dvh - ${headerH}px)` }}
-            >
-              <div className="relative w-full h-full mx-auto bg-gray-900 rounded-2xl overflow-hidden border border-gray-800">
-                {/* 영상 */}
-                <div className={`absolute inset-0 overflow-hidden ${COVER_IFRAME}`}>
-                  <div ref={setPlayHostRef} className="w-full h-full" />
-                </div>
-                {/* 유튜브 UI 클릭 차단 */}
-                <div className="absolute inset-0" />
- 
-                {/* 유튜브 상단 정보(채널/제목) 가리개 */}
-                <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-black via-black/80 to-transparent z-10 pointer-events-none" />
- 
-                {/* 제목 입력 오버레이 */}
-                <div className="absolute bottom-0 left-0 right-0 z-20">
-                  <div className="bg-gradient-to-t from-black via-black/85 to-transparent pt-16 pb-4 px-4">
-                    <label className="text-xs font-bold text-orange-300 block mb-2">
-                      💡 이 영상의 제목은?
-                    </label>
-                    <div className="flex gap-2 items-end">
-                      <textarea
-                        value={titleInput}
-                        onChange={(e) => setTitleInput(e.target.value.slice(0, 100))}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            submitTitle();
-                          }
-                        }}
-                        placeholder="떠오르는 제목을 입력..."
-                        className="flex-1 bg-white/10 backdrop-blur text-white rounded-xl px-3 py-2.5 text-base border border-white/20 outline-none focus:outline-none focus:ring-0 resize-none placeholder:text-gray-400"
-                        style={{ WebkitTapHighlightColor: 'transparent' }}
-                        rows="1"
-                        maxLength="100"
-                      />
-                      <motion.button
-                        onClick={submitTitle}
-                        disabled={!titleInput.trim()}
-                        whileTap={titleInput.trim() ? { scale: 0.92 } : {}}
-                        className={`shrink-0 w-12 h-11 rounded-xl font-bold text-lg transition-all ${
-                          titleInput.trim()
-                            ? 'bg-green-500 text-white'
-                            : 'bg-gray-700/70 text-gray-500'
-                        }`}
-                      >
-                        📤
-                      </motion.button>
-                    </div>
-                    <div className="text-[10px] text-gray-500 mt-1.5">
-                      {titleInput.length}/100 · Enter로 전송
-                    </div>
- 
-                    {/* 다른 영상 버튼 */}
-                    <div className="flex justify-center mt-3">
-                      <motion.button
-                        onClick={spinSlot}
-                        disabled={isSpinning}
-                        whileTap={!isSpinning ? { scale: 0.95 } : {}}
-                        className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
-                          isSpinning
-                            ? 'bg-gray-700/80 text-gray-400'
-                            : 'bg-gradient-to-r from-cyan-500 to-pink-500 text-white shadow-lg shadow-pink-500/30'
-                        }`}
-                      >
-                        {isSpinning ? '🎬 스핀 중...' : '🎰 다른 영상'}
-                      </motion.button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          /* ── 피드 탭 ── */
-          <motion.div
-            key="feed"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed left-0 right-0 bottom-0 bg-black"
-            style={{ top: headerH }}
-          >
-            {submissions.length === 0 ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center text-gray-500 px-6">
-                  <p className="text-lg font-semibold">아직 제목이 없어요.</p>
-                  <p className="text-sm mt-2">플레이 탭에서 영상을 보고</p>
-                  <p className="text-sm">제목을 만들어보세요! 🎮</p>
-                </div>
+
+      {/* ── 본문 ── */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {tab === 'play' ? (
+          /* ── 고르기: 3장 ── */
+          <div className="h-full max-w-md mx-auto px-3 py-3">
+            {candidates.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-neutral-500 text-sm">
+                이미지를 다 봤어요.
               </div>
             ) : (
-              <div
-                ref={setFeedNode}
-                className="h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth"
-              >
-                {submissions.map((sub, idx) => (
-                  <div
-                    key={sub.id}
-                    data-video-id={sub.id}
-                    className="h-full w-full snap-start snap-always relative bg-black"
+              <div className="h-full flex flex-col gap-2">
+                {candidates.map((img) => (
+                  <motion.button
+                    key={img.id}
+                    onClick={() => choose(img)}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex-1 min-h-0 relative rounded-xl overflow-hidden bg-neutral-900 active:brightness-110"
                   >
-                    <div className={`absolute inset-0 overflow-hidden ${COVER_IFRAME}`}>
-                      <div ref={setHostRef(sub.id, sub.youtubeId)} className="w-full h-full" />
-                    </div>
- 
-                    {/* 탭하면 소리 토글 */}
-                    <div
-                      className="absolute inset-0 cursor-pointer"
-                      onClick={() => setSoundOn((v) => !v)}
+                    <img
+                      src={img.src}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover"
+                      draggable={false}
                     />
- 
-                    {/* 유튜브 상단 정보(채널/제목) 가리개 */}
-                    <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none" />
- 
-                    {/* 제목 */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/70 to-transparent pb-8 pt-16 px-4 pointer-events-none">
-                      <p className="text-xl font-bold text-white mb-1 break-words pr-20 leading-snug">
-                        "{sub.title}"
-                      </p>
-                      <p className="text-xs text-gray-500">{formatTime(sub.timestamp)}</p>
-                    </div>
- 
-                    {/* 액션 */}
-                    <div className="absolute right-3 bottom-28 flex flex-col gap-4 z-10">
-                      <motion.button
-                        onClick={() => toggleLike(sub.id)}
-                        whileTap={{ scale: 0.9 }}
-                        className="flex flex-col items-center gap-1"
-                      >
-                        <div className="w-12 h-12 rounded-full bg-gray-800/60 flex items-center justify-center text-2xl">
-                          {likes[sub.id] ? '❤️' : '🤍'}
-                        </div>
-                        <span className="text-xs font-semibold text-white">{sub.likes}</span>
-                      </motion.button>
- 
-                      <button className="flex flex-col items-center opacity-50" disabled>
-                        <div className="w-12 h-12 rounded-full bg-gray-800/60 flex items-center justify-center text-2xl">
-                          💬
-                        </div>
-                      </button>
-                      <button className="flex flex-col items-center opacity-50" disabled>
-                        <div className="w-12 h-12 rounded-full bg-gray-800/60 flex items-center justify-center text-2xl">
-                          📤
-                        </div>
-                      </button>
-                    </div>
- 
-                    <div className="absolute top-3 right-3 bg-black/60 rounded-full px-3 py-1 text-xs text-white font-semibold pointer-events-none z-10">
-                      {idx + 1} / {submissions.length}
-                    </div>
- 
-                    {!soundOn && (
-                      <div className="absolute top-3 left-3 bg-black/60 rounded-full px-3 py-1 text-xs text-gray-300 pointer-events-none z-10">
-                        🔇 탭하면 소리
-                      </div>
-                    )}
-                  </div>
+                  </motion.button>
                 ))}
               </div>
             )}
+          </div>
+        ) : (
+          /* ── 콜렉션 ── */
+          <div className="h-full overflow-y-auto">
+            <div className="max-w-md mx-auto px-3 py-4 space-y-6">
+              {/* 콜렉션 카드 표지 */}
+              {openedDecks.length > 0 && (
+                <div>
+                  <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+                    {openedDecks.map((deck) => {
+                      const imgs = deckImages(deck.tag);
+                      return (
+                        <motion.div
+                          key={deck.tag}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="shrink-0 w-32"
+                        >
+                          <div className="relative w-32 h-44 rounded-xl overflow-hidden border-2 border-amber-400/70 shadow-lg shadow-amber-500/10">
+                            <img
+                              src={imgs[0]?.src}
+                              alt=""
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-2.5">
+                              <p className="text-[10px] text-amber-300 font-semibold mb-0.5">
+                                COLLECTION
+                              </p>
+                              <p className="text-base font-black leading-tight">
+                                {deck.tag}
+                              </p>
+                              <p className="text-[10px] text-neutral-400 mt-0.5">
+                                {imgs.length}장
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 모은 이미지 나열 */}
+              <div>
+                {collected.length === 0 ? (
+                  <div className="py-20 text-center text-neutral-600 text-sm">
+                    아직 고른 이미지가 없어요.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[...collected].reverse().map((img, i) => (
+                      <motion.div
+                        key={`${img.id}-${i}`}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="aspect-[2/3] rounded-lg overflow-hidden bg-neutral-900"
+                      >
+                        <img
+                          src={img.src}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── 콜렉션 오픈 얼럿 ── */}
+      <AnimatePresence>
+        {newDeck && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center px-6"
+            onClick={() => setNewDeck(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+              className="w-full max-w-xs bg-neutral-950 border border-amber-400/40 rounded-2xl p-6 text-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-3xl mb-3">✨</p>
+              <p className="text-xs text-amber-300 font-semibold tracking-widest mb-2">
+                NEW COLLECTION
+              </p>
+              <p className="text-2xl font-black mb-1">{newDeck}</p>
+              <p className="text-sm text-neutral-400 mb-5">
+                콜렉션이 열렸습니다
+              </p>
+              <button
+                onClick={() => setNewDeck(null)}
+                className="w-full py-2.5 rounded-xl bg-amber-400 text-black font-bold text-sm"
+              >
+                확인
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
